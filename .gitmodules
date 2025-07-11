@@ -1,0 +1,3 @@
+[submodule "package/tests"]
+	path = package/tests
+	url = https://github.com/NearCult/DevMet-test.git
