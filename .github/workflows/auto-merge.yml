@@ -24,13 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           fetch-depth: 0
       
       - name: Check PR status
         id: check
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           PR_DATA=$(gh pr view ${{ github.event.inputs.pr_number }} --json state,mergeable,reviewDecision,statusCheckRollup)
           
@@ -68,12 +68,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           fetch-depth: 0
       
       - name: Merge PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           echo "🚀 Auto-merging PR #${{ github.event.inputs.pr_number }} to ${{ github.event.inputs.target_branch }}"
           
@@ -88,7 +88,7 @@ jobs:
       - name: Post merge notification
         if: success()
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           gh pr comment ${{ github.event.inputs.pr_number }} --body "🎉 **Auto-merge completed successfully!**
           
