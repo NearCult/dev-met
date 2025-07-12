@@ -1,4 +1,3 @@
-# .github/workflows/pr-checks.yml
 name: PR-checks
 on:
   pull_request:
@@ -57,7 +56,7 @@ jobs:
         run: pnpm install
       
       - name: Build project
-        run: pnpm build
+        run: pnpm run build
       
       - name: Run lint and typecheck for ${{ matrix.target }}
         if: needs.detect-changes.outputs[matrix.target] == 'true'

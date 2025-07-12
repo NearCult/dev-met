@@ -1,4 +1,3 @@
-# .github/workflows/auto-merge.yml
 name: Auto-merge
 on:
   workflow_dispatch:
