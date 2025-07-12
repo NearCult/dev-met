@@ -57,7 +57,7 @@ jobs:
       
       - name: Build project
         working-directory: ${{ matrix.path }}
-        run: pnpm run build
+        run: pnpm build
       
       - name: Run lint and typecheck for ${{ matrix.target }}
         if: needs.detect-changes.outputs[matrix.target] == 'true'
