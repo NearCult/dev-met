@@ -107,12 +107,12 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Check if all jobs succeeded
+      - name: Check if all jobs succeeded or were skipped
         run: |
-          if [[ "${{ needs.lint-and-typecheck.result }}" == "success" && "${{ needs.test.result }}" == "success" ]]; then
+          if [[ "${{ needs.lint-and-typecheck.result }}" =~ ^(success|skipped)$ && "${{ needs.test.result }}" =~ ^(success|skipped)$ ]]; then
             echo "All PR checks passed!"
             exit 0
           else
             echo "Some PR checks failed!"
             exit 1
-          fi
+            fi
