@@ -57,6 +57,7 @@ jobs:
         run: pnpm install
       
       - name: Build project
+        working-directory: ${{ matrix.path }}
         run: pnpm build
       
       - name: Run lint and typecheck for ${{ matrix.target }}
