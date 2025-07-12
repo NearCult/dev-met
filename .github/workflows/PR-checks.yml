@@ -1,0 +1,61 @@
+name: PR-checks
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'apps/devmet-app/**'
+            backend:
+              - 'apps/devmet-backend/**'
+            ui:
+              - 'packages/devmet-ui/**'
+
+  lint-and-typecheck:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: |
+      needs.detect-changes.outputs.frontend == 'true' ||
+      needs.detect-changes.outputs.backend == 'true' ||
+      needs.detect-changes.outputs.ui == 'true'
+    strategy:
+      matrix:
+        target: [frontend, backend, ui]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: build app
+        run: pnpm build
+
+      - name: Run lint and typecheck
+        working-directory: ${{ matrix.target == 'frontend' && 'apps/devmet-app' || matrix.target == 'backend' && 'apps/devmet-backend' || 'packages/devmet-ui' }}
+        run: |
+          pnpm lint
+          pnpm typecheck
