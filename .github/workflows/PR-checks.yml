@@ -78,18 +78,26 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          cd apps/devmet-apps
+          pnpm install
 
       - name: Lint
-        run: pnpm --filter devmet-apps run lint
+        run: |
+          cd apps/devmet-apps
+          pnpm run lint
         continue-on-error: false
 
       - name: Typecheck
-        run: pnpm --filter devmet-apps run typecheck
+        run: |
+          cd apps/devmet-apps
+          pnpm run typecheck
         continue-on-error: false
 
       - name: Build
-        run: pnpm --filter devmet-apps run build
+        run: |
+          cd apps/devmet-apps
+          pnpm run build
         continue-on-error: false
 
   devmet-ui:
@@ -116,14 +124,20 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          cd package/devmet-ui
+          pnpm install
 
       - name: Lint
-        run: pnpm --filter devmet-ui run lint
+        run: |
+          cd package/devmet-ui
+          pnpm run lint
         continue-on-error: false
 
       - name: Build
-        run: pnpm --filter devmet-ui run build
+        run: |
+          cd package/devmet-ui
+          pnpm run build
         continue-on-error: false
 
   devmet-backend:
@@ -150,18 +164,26 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          cd apps/devmet-backend
+          pnpm install
 
       - name: Lint
-        run: pnpm --filter devmet-backend run lint
+        run: |
+          cd apps/devmet-backend
+          pnpm run lint
         continue-on-error: false
 
       - name: Build
-        run: pnpm --filter devmet-backend run build
+        run: |
+          cd apps/devmet-backend
+          pnpm run build
         continue-on-error: false
 
       - name: Run tests (optional)
-        run: pnpm --filter devmet-backend run test
+        run: |
+          cd apps/devmet-backend
+          pnpm run test
         continue-on-error: false
 
   pr-checks-complete:
