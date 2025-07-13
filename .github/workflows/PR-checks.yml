@@ -74,6 +74,11 @@ jobs:
           node-version: 18
           cache: 'pnpm'
 
+      - name: Install dependencies
+        run: |
+          cd apps/devmet-apps
+          pnpm install
+
       - name: Lint
         run: |
           cd apps/devmet-apps
@@ -109,6 +114,11 @@ jobs:
           node-version: 18
           cache: 'pnpm'
 
+      - name: Install dependencies
+        run: |
+          cd package/devmet-ui
+          pnpm install
+
       - name: Lint
         run: |
           cd package/devmet-ui
@@ -138,6 +148,11 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          cd apps/devmet-backend
+          pnpm install
 
       - name: Lint
         run: |
