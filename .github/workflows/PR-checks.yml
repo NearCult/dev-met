@@ -31,7 +31,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install root dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Detect changed paths
         uses: dorny/paths-filter@v3
@@ -78,7 +78,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Lint
         run: pnpm --filter devmet-apps run lint
@@ -113,7 +113,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Lint
         run: pnpm --filter devmet-ui run lint
@@ -145,7 +145,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Lint
         run: pnpm --filter devmet-backend run lint
