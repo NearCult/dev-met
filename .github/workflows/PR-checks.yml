@@ -51,18 +51,18 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./apps/devmet-app
+        working-directory: apps/devmet-app
         run: pnpm lint
 
       - name: typecheck
-        working-directory: ./apps/devmet-app
+        working-directory: apps/devmet-app
         run: pnpm typecheck
 
       - name: Build
-        working-directory: ./apps/devmet-app
+        working-directory: apps/devmet-app
         run: pnpm build
 
   devmet-ui:
@@ -85,14 +85,14 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./package/devmet-ui
+        working-directory: package/devmet-ui
         run: pnpm lint
 
       - name: Build
-        working-directory: ./package/devmet-ui
+        working-directory: package/devmet-ui
         run: pnpm build
 
   devmet-backend:
@@ -115,18 +115,18 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./apps/devmet-backend
+        working-directory: apps/devmet-backend
         run: pnpm lint
 
       - name: Build
-        working-directory: ./apps/devmet-backend
+        working-directory: apps/devmet-backend
         run: pnpm build
 
       # - name: Run tests
-      #   run: pnpm --filter "./apps/devmet-backend" test
+      #   run: pnpm --filter "apps/devmet-backend" test
 
   pr-checks-complete:
     runs-on: ubuntu-latest
