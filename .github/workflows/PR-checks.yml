@@ -52,15 +52,19 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        working-directory: devmet
 
       - name: Lint
         run: pnpm --filter devmet-app lint
+        working-directory: devmet
 
       - name: typecheck
         run: pnpm --filter devmet-app typecheck
+        working-directory: devmet
 
       - name: Build
         run: pnpm --filter devmet-app build
+        working-directory: devmet
 
   devmet-ui:
     needs: changes
@@ -83,12 +87,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        working-directory: devmet
 
       - name: Lint
         run: pnpm --filter devmet-ui lint
+        working-directory: devmet
 
       - name: Build
         run: pnpm --filter devmet-ui build
+        working-directory: devmet
 
   devmet-backend:
     needs: changes
@@ -111,15 +118,19 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        working-directory: devmet
 
       - name: Lint
         run: pnpm --filter devmet-backend lint
+        working-directory: devmet
 
       - name: Build
         run: pnpm --filter devmet-backend build
+        working-directory: devmet
 
       # - name: Run tests
       #   run: pnpm --filter devmet-backend test
+      #   working-directory: devmet
 
   pr-checks-complete:
     runs-on: ubuntu-latest
