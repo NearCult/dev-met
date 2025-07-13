@@ -23,7 +23,7 @@ jobs:
         with:
           filters: |
             devmet-app:
-              - 'apps/devmet-app/**'
+              - 'apps/devmet-apps/**'
               - 'pnpm-workspace.yaml'
               - 'package.json'
             devmet-ui:
