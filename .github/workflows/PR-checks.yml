@@ -117,3 +117,37 @@ jobs:
 
       - name: Run tests
         run: pnpm --filter devmet-backend test
+
+  pr-checks-complete:
+    runs-on: ubuntu-latest
+    needs: [changes, devmet-app, devmet-ui, devmet-backend]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Changes: ${{ needs.changes.result }}"
+          echo "devmet-app: ${{ needs.devmet-app.result }}"
+          echo "devmet-ui: ${{ needs.devmet-ui.result }}"
+          echo "devmet-backend: ${{ needs.devmet-backend.result }}"
+          
+          if [[ "${{ needs.changes.result }}" == "failure" ]]; then
+            echo "Changes job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-app.result }}" == "failure" ]]; then
+            echo "devmet-app job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-ui.result }}" == "failure" ]]; then
+            echo "devmet-ui job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-backend.result }}" == "failure" ]]; then
+            echo "devmet-backend job failed"
+            exit 1
+          fi
+          
+          echo "All jobs completed successfully!"
