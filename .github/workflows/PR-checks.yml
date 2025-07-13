@@ -35,9 +35,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.devmet-app == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/devmet-app
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,18 +54,15 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter devmet-app lint
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter devmet-app build
 
   devmet-ui:
     needs: changes
     if: needs.changes.outputs.devmet-ui == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: package/devmet-ui
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,18 +82,15 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter devmet-ui lint
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter devmet-ui build
 
   devmet-backend:
     needs: changes
     if: needs.changes.outputs.devmet-backend == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/devmet-backend
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,10 +110,10 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter devmet-backend lint
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter devmet-backend build
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm --filter devmet-backend test
