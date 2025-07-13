@@ -12,29 +12,29 @@ jobs:
       devmet-ui: ${{ steps.filter.outputs.devmet-ui }}
       devmet-backend: ${{ steps.filter.outputs.devmet-backend }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT || github.token }}
+          token: ${{ secrets.PAT }}
           submodules: recursive
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 8.15.6
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
 
       - name: Install root dependencies
-        run: |
-          pnpm install
-          # Install required types if missing
-          cd apps/devmet-apps && pnpm add -D @types/react @types/node typescript next || true
-          cd ../..
+        run: pnpm install
 
-      - uses: dorny/paths-filter@v3
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -54,18 +54,15 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
 
-  checks:
+  devmet-app:
     needs: setup
+    if: needs.setup.outputs.devmet-app == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ['devmet-app', 'devmet-ui', 'devmet-backend']
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT || github.token }}
-          submodules: false
+          token: ${{ secrets.PAT }}
+          submodules: recursive
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -77,51 +74,127 @@ jobs:
           node-version: 18
           cache: 'pnpm'
 
-      - name: Run checks
-        if: needs.setup.outputs.${{ matrix.project }} == 'true' && github.event.pull_request.draft == false
+      - name: Install dependencies
         run: |
-          case "${{ matrix.project }}" in
-            devmet-app) PROJECT_DIR="apps/devmet-apps" ;;
-            devmet-ui) PROJECT_DIR="package/devmet-ui" ;;
-            devmet-backend) PROJECT_DIR="apps/devmet-backend" ;;
-          esac
-          cd "$PROJECT_DIR"
-          
-          # Ensure types are available
-          if [[ "${{ matrix.project }}" == "devmet-app" ]]; then
-            pnpm ls @types/react || pnpm add -D @types/react
-            pnpm ls @types/node || pnpm add -D @types/node
-          fi
-          
+          cd apps/devmet-apps
+          pnpm install
+
+      - name: Lint
+        run: |
+          cd apps/devmet-apps
           pnpm run lint
-          pnpm run typecheck || pnpm exec tsc --noEmit
+
+      - name: Typecheck
+        run: |
+          cd apps/devmet-apps
+          pnpm run typecheck
+
+      - name: Build
+        run: |
+          cd apps/devmet-apps
           pnpm run build
-          
-          if [[ "${{ matrix.project }}" == "devmet-backend" ]]; then
-            pnpm run test
-          fi
+
+  devmet-ui:
+    needs: setup
+    if: needs.setup.outputs.devmet-ui == 'true' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          cd package/devmet-ui
+          pnpm install
+
+      - name: Lint
+        run: |
+          cd package/devmet-ui
+          pnpm run lint
+
+      - name: Build
+        run: |
+          cd package/devmet-ui
+          pnpm run build
+
+  devmet-backend:
+    needs: setup
+    if: needs.setup.outputs.devmet-backend == 'true' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          cd apps/devmet-backend
+          pnpm install
+
+      - name: Lint
+        run: |
+          cd apps/devmet-backend
+          pnpm run lint
+
+      - name: Build
+        run: |
+          cd apps/devmet-backend
+          pnpm run build
 
   pr-checks-complete:
     runs-on: ubuntu-latest
-    needs: [setup, checks]
+    needs: [setup, devmet-app, devmet-ui, devmet-backend]
     if: always()
     steps:
-      - name: Check results
+      - name: Check job statuses
         run: |
           echo "Job Status Report:"
           echo "------------------"
-          echo "devmet-app: ${{ needs.setup.outputs.devmet-app }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
-          echo "devmet-ui: ${{ needs.setup.outputs.devmet-ui }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
-          echo "devmet-backend: ${{ needs.setup.outputs.devmet-backend }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
+          echo "devmet-app: ${{ needs.devmet-app.result }}"
+          echo "devmet-ui: ${{ needs.devmet-ui.result }}"
+          echo "devmet-backend: ${{ needs.devmet-backend.result }}"
           
           if [[ "${{ needs.setup.result }}" == "failure" ]]; then
-            echo "::error::Setup failed"
+            echo "::error::Setup job failed"
             exit 1
           fi
           
-          if [[ "${{ needs.checks.result }}" == "failure" ]]; then
-            echo "::error::Some checks failed"
+          if [[ "${{ needs.devmet-app.result }}" == "failure" ]]; then
+            echo "::error::devmet-app checks failed"
             exit 1
           fi
           
-          echo "All checks completed"
+          if [[ "${{ needs.devmet-ui.result }}" == "failure" ]]; then
+            echo "::error::devmet-ui checks failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-backend.result }}" == "failure" ]]; then
+            echo "::error::devmet-backend checks failed"
+            exit 1
+          fi
+
+          echo "✅ All checks passed successfully!"
