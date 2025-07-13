@@ -1,119 +1,119 @@
-# .github/workflows/pr-checks.yml
-name: PR-checks
+name: PR Checks
+
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  detect-changes:
+  changes:
     runs-on: ubuntu-latest
     outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      backend: ${{ steps.filter.outputs.backend }}
-      ui: ${{ steps.filter.outputs.ui }}
+      devmet-app: ${{ steps.filter.outputs.devmet-app }}
+      devmet-ui: ${{ steps.filter.outputs.devmet-ui }}
+      devmet-backend: ${{ steps.filter.outputs.devmet-backend }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: dorny/paths-filter@v2
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            frontend:
+            devmet-app:
               - 'apps/devmet-app/**'
-            backend:
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+            devmet-ui:
+              - 'package/devmet-ui/**'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+            devmet-backend:
               - 'apps/devmet-backend/**'
-            ui:
-              - 'packages/devmet-ui/**'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
 
-  lint-and-typecheck:
-    needs: detect-changes
+  devmet-app:
+    needs: changes
+    if: needs.changes.outputs.devmet-app == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    if: |
-      needs.detect-changes.outputs.frontend == 'true' ||
-      needs.detect-changes.outputs.backend == 'true' ||
-      needs.detect-changes.outputs.ui == 'true'
-    strategy:
-      matrix:
-        target: [frontend, backend, ui]
-        include:
-          - target: frontend
-            path: apps/devmet-app
-          - target: backend
-            path: apps/devmet-backend
-          - target: ui
-            path: packages/devmet-ui
+    defaults:
+      run:
+        working-directory: apps/devmet-app
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: 8
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
+          node-version: 18
           cache: 'pnpm'
-      
+
+      - name: Enable corepack & install pnpm
+        run: corepack enable && corepack prepare pnpm@8.15.6 --activate
+
       - name: Install dependencies
         run: pnpm install
-      
-      - name: Build project
-        working-directory: ${{ matrix.path }}
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
         run: pnpm build
-      
-      - name: Run lint and typecheck for ${{ matrix.target }}
-        if: needs.detect-changes.outputs[matrix.target] == 'true'
-        working-directory: ${{ matrix.path }}
-        run: |
-          pnpm lint
-          pnpm typecheck
 
-  test:
-    needs: detect-changes
+  devmet-ui:
+    needs: changes
+    if: needs.changes.outputs.devmet-ui == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    if: |
-      needs.detect-changes.outputs.frontend == 'true' ||
-      needs.detect-changes.outputs.backend == 'true' ||
-      needs.detect-changes.outputs.ui == 'true'
-    strategy:
-      matrix:
-        target: [frontend, backend, ui]
-        include:
-          - target: frontend
-            path: apps/devmet-app
-          - target: backend
-            path: apps/devmet-backend
-          - target: ui
-            path: packages/devmet-ui
+    defaults:
+      run:
+        working-directory: package/devmet-ui
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: 8
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
+          node-version: 18
           cache: 'pnpm'
-      
+
+      - name: Enable corepack & install pnpm
+        run: corepack enable && corepack prepare pnpm@8.15.6 --activate
+
       - name: Install dependencies
         run: pnpm install
-      
-      # - name: Run tests for ${{ matrix.target }}
-      #   if: needs.detect-changes.outputs[matrix.target] == 'true'
-      #   working-directory: ${{ matrix.path }}
-      #   # run: pnpm test
 
-  # Summary job to check if all required checks passed
-  pr-checks-complete:
-    needs: [detect-changes, lint-and-typecheck, test]
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+  devmet-backend:
+    needs: changes
+    if: needs.changes.outputs.devmet-backend == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    if: always()
+    defaults:
+      run:
+        working-directory: apps/devmet-backend
     steps:
-      - name: Check if all jobs succeeded or were skipped
-        run: |
-          if [[ "${{ needs.lint-and-typecheck.result }}" =~ ^(success|skipped)$ && "${{ needs.test.result }}" =~ ^(success|skipped)$ ]]; then
-            echo "All PR checks passed!"
-            exit 0
-          else
-            echo "Some PR checks failed!"
-            exit 1
-            fi
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Enable corepack & install pnpm
+        run: corepack enable && corepack prepare pnpm@8.15.6 --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
