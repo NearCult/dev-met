@@ -1,12 +1,12 @@
 [submodule "package/devmet-tests"]
 	path = package/devmet-tests
-	url = https://github.com/NearCult/DevMet-test.git
+	url = git@github.com:NearCult/DevMet-test.git
 [submodule "package/devmet-ui"]
 	path = package/devmet-ui
-	url = https://github.com/NearCult/DevMet-ui.git
+	url = git@github.com:NearCult/DevMet-ui.git
 [submodule "apps/devmet-backend"]
 	path = apps/devmet-backend
-	url = https://github.com/NearCult/DevMet-backend.git
+	url = git@github.com:NearCult/DevMet-backend.git
 [submodule "apps/devmet-apps"]
 	path = apps/devmet-apps
-	url = https://github.com/NearCult/DevMet-app.git
+	url = git@github.com:NearCult/DevMet-app.git
