@@ -28,7 +28,11 @@ jobs:
           cache: 'pnpm'
 
       - name: Install root dependencies
-        run: pnpm install
+        run: |
+          pnpm install
+          # Install required types if missing
+          cd apps/devmet-apps && pnpm add -D @types/react @types/node typescript next || true
+          cd ../..
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -61,7 +65,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT || github.token }}
-          submodules: recursive
+          submodules: false
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -73,29 +77,24 @@ jobs:
           node-version: 18
           cache: 'pnpm'
 
-      - name: Determine project directory
-        id: project-dir
-        run: |
-          case "${{ matrix.project }}" in
-            devmet-app) DIR="apps/devmet-apps" ;;
-            devmet-ui) DIR="package/devmet-ui" ;;
-            devmet-backend) DIR="apps/devmet-backend" ;;
-          esac
-          echo "dir=$DIR" >> $GITHUB_OUTPUT
-
       - name: Run checks
         if: needs.setup.outputs.${{ matrix.project }} == 'true' && github.event.pull_request.draft == false
         run: |
-          cd ${{ steps.project-dir.outputs.dir }}
+          case "${{ matrix.project }}" in
+            devmet-app) PROJECT_DIR="apps/devmet-apps" ;;
+            devmet-ui) PROJECT_DIR="package/devmet-ui" ;;
+            devmet-backend) PROJECT_DIR="apps/devmet-backend" ;;
+          esac
+          cd "$PROJECT_DIR"
           
-          # Check if typecheck script exists, otherwise use tsc --noEmit
-          if [ -f package.json ] && grep -q '"typecheck"' package.json; then
-            pnpm run typecheck
-          else
-            pnpm exec tsc --noEmit || echo "::warning::Type checking not configured for ${{ matrix.project }}"
+          # Ensure types are available
+          if [[ "${{ matrix.project }}" == "devmet-app" ]]; then
+            pnpm ls @types/react || pnpm add -D @types/react
+            pnpm ls @types/node || pnpm add -D @types/node
           fi
           
           pnpm run lint
+          pnpm run typecheck || pnpm exec tsc --noEmit
           pnpm run build
           
           if [[ "${{ matrix.project }}" == "devmet-backend" ]]; then
@@ -107,16 +106,16 @@ jobs:
     needs: [setup, checks]
     if: always()
     steps:
-      - name: Check job statuses
+      - name: Check results
         run: |
           echo "Job Status Report:"
           echo "------------------"
-          echo "devmet-app: ${{ needs.setup.outputs.devmet-app }}"
-          echo "devmet-ui: ${{ needs.setup.outputs.devmet-ui }}"
-          echo "devmet-backend: ${{ needs.setup.outputs.devmet-backend }}"
+          echo "devmet-app: ${{ needs.setup.outputs.devmet-app }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
+          echo "devmet-ui: ${{ needs.setup.outputs.devmet-ui }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
+          echo "devmet-backend: ${{ needs.setup.outputs.devmet-backend }} (${{ needs.checks.result == 'success' && '✅' || '❌' }})"
           
           if [[ "${{ needs.setup.result }}" == "failure" ]]; then
-            echo "::error::Setup job failed"
+            echo "::error::Setup failed"
             exit 1
           fi
           
@@ -125,4 +124,4 @@ jobs:
             exit 1
           fi
           
-          echo "All checks passed successfully!"
+          echo "All checks completed"
