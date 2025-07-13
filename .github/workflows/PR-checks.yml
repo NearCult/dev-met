@@ -1,11 +1,11 @@
-name: Monorepo PR Checks
+name: PR Checks
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  detect-changes:
+  changes:
     runs-on: ubuntu-latest
     outputs:
       devmet-app: ${{ steps.filter.outputs.devmet-app }}
@@ -13,8 +13,6 @@ jobs:
       devmet-backend: ${{ steps.filter.outputs.devmet-backend }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -24,86 +22,142 @@ jobs:
               - 'apps/devmet-app/**'
               - 'pnpm-workspace.yaml'
               - 'package.json'
-              - 'pnpm-lock.yaml'
             devmet-ui:
               - 'package/devmet-ui/**'
               - 'pnpm-workspace.yaml'
               - 'package.json'
-              - 'pnpm-lock.yaml'
             devmet-backend:
               - 'apps/devmet-backend/**'
               - 'pnpm-workspace.yaml'
               - 'package.json'
-              - 'pnpm-lock.yaml'
 
-  setup:
+  devmet-app:
+    needs: changes
+    if: needs.changes.outputs.devmet-app == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: pnpm/action-setup@v4
         with:
           version: 8.15.6
-          
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-  devmet-app:
-    needs: [detect-changes, setup]
-    if: needs.detect-changes.outputs.devmet-app == 'true' && github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Lint
+        working-directory: apps/devmet-app
+        run: pnpm lint
 
-      - name: Run lint
-        run: pnpm --filter devmet-app run lint
+      - name: typecheck
+        working-directory: apps/devmet-app
+        run: pnpm typecheck
 
-      - name: Run typecheck
-        run: pnpm --filter devmet-app run typecheck
-
-      - name: Run build
-        run: pnpm --filter devmet-app run build
+      - name: Build
+        working-directory: apps/devmet-app
+        run: pnpm build
 
   devmet-ui:
-    needs: [detect-changes, setup]
-    if: needs.detect-changes.outputs.devmet-ui == 'true' && github.event.pull_request.draft == false
+    needs: changes
+    if: needs.changes.outputs.devmet-ui == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run lint
-        run: pnpm --filter devmet-ui run lint
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
 
-      - name: Run build
-        run: pnpm --filter devmet-ui run build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: package/devmet-ui
+        run: pnpm lint
+
+      - name: Build
+        working-directory: package/devmet-ui
+        run: pnpm build
 
   devmet-backend:
-    needs: [detect-changes, setup]
-    if: needs.detect-changes.outputs.devmet-backend == 'true' && github.event.pull_request.draft == false
+    needs: changes
+    if: needs.changes.outputs.devmet-backend == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run lint
-        run: pnpm --filter devmet-backend run lint
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
 
-      - name: Run build
-        run: pnpm --filter devmet-backend run build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
 
-  summary:
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/devmet-backend
+        run: pnpm lint
+
+      - name: Build
+        working-directory: apps/devmet-backend
+        run: pnpm build
+
+      # - name: Run tests
+      #   run: pnpm --filter "apps/devmet-backend" test
+
+  pr-checks-complete:
     runs-on: ubuntu-latest
-    needs: [devmet-app, devmet-ui, devmet-backend]
+    needs: [changes, devmet-app, devmet-ui, devmet-backend]
     if: always()
     steps:
-      - name: Show status
+      - name: Check all jobs status
         run: |
+          echo "Changes: ${{ needs.changes.result }}"
           echo "devmet-app: ${{ needs.devmet-app.result }}"
           echo "devmet-ui: ${{ needs.devmet-ui.result }}"
           echo "devmet-backend: ${{ needs.devmet-backend.result }}"
-          if [[ "${{ needs.devmet-app.result }}" == "failure" ]]; then exit 1; fi
-          if [[ "${{ needs.devmet-ui.result }}" == "failure" ]]; then exit 1; fi
-          if [[ "${{ needs.devmet-backend.result }}" == "failure" ]]; then exit 1; fi
+          
+          if [[ "${{ needs.changes.result }}" == "failure" ]]; then
+            echo "Changes job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-app.result }}" == "failure" ]]; then
+            echo "devmet-app job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-ui.result }}" == "failure" ]]; then
+            echo "devmet-ui job failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.devmet-backend.result }}" == "failure" ]]; then
+            echo "devmet-backend job failed"
+            exit 1
+          fi
+          
+          echo "All jobs completed successfully!"
