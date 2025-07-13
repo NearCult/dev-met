@@ -54,16 +54,13 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        working-directory: apps/devmet-app
-        run: pnpm lint
+        run: pnpm --filter devmet-app lint
 
       - name: typecheck
-        working-directory: apps/devmet-app
-        run: pnpm typecheck
+        run: pnpm --filter devmet-app typecheck
 
       - name: Build
-        working-directory: apps/devmet-app
-        run: pnpm build
+        run: pnpm --filter devmet-app build
 
   devmet-ui:
     needs: changes
@@ -88,12 +85,10 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        working-directory: package/devmet-ui
-        run: pnpm lint
+        run: pnpm --filter devmet-ui lint
 
       - name: Build
-        working-directory: package/devmet-ui
-        run: pnpm build
+        run: pnpm --filter devmet-ui build
 
   devmet-backend:
     needs: changes
@@ -118,15 +113,13 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        working-directory: apps/devmet-backend
-        run: pnpm lint
+        run: pnpm --filter devmet-backend lint
 
       - name: Build
-        working-directory: apps/devmet-backend
-        run: pnpm build
+        run: pnpm --filter devmet-backend build
 
       # - name: Run tests
-      #   run: pnpm --filter "apps/devmet-backend" test
+      #   run: pnpm --filter devmet-backend test
 
   pr-checks-complete:
     runs-on: ubuntu-latest
