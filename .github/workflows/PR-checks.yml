@@ -82,12 +82,15 @@ jobs:
 
       - name: Lint
         run: pnpm --filter devmet-apps run lint
+        continue-on-error: false
 
       - name: Typecheck
         run: pnpm --filter devmet-apps run typecheck
+        continue-on-error: false
 
       - name: Build
         run: pnpm --filter devmet-apps run build
+        continue-on-error: false
 
   devmet-ui:
     needs: setup
@@ -117,9 +120,11 @@ jobs:
 
       - name: Lint
         run: pnpm --filter devmet-ui run lint
+        continue-on-error: false
 
       - name: Build
         run: pnpm --filter devmet-ui run build
+        continue-on-error: false
 
   devmet-backend:
     needs: setup
@@ -149,12 +154,15 @@ jobs:
 
       - name: Lint
         run: pnpm --filter devmet-backend run lint
+        continue-on-error: false
 
       - name: Build
         run: pnpm --filter devmet-backend run build
+        continue-on-error: false
 
       - name: Run tests (optional)
         run: pnpm --filter devmet-backend run test
+        continue-on-error: false
 
   pr-checks-complete:
     runs-on: ubuntu-latest
