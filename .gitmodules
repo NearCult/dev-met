@@ -1,6 +1,3 @@
-[submodule "apps/devmet-app"]
-	path = apps/devmet-app
-	url = https://github.com/NearCult/dev-met.git
 [submodule "package/devmet-tests"]
 	path = package/devmet-tests
 	url = https://github.com/NearCult/DevMet-test.git
@@ -10,3 +7,6 @@
 [submodule "apps/devmet-backend"]
 	path = apps/devmet-backend
 	url = https://github.com/NearCult/DevMet-backend.git
+[submodule "apps/devmet-apps"]
+	path = apps/devmet-apps
+	url = https://github.com/NearCult/DevMet-app.git
