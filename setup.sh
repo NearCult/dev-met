@@ -11,5 +11,4 @@ git submodule update --init --force --recursive
 
 echo "installing node modules"
 
-cd dev-met
 npx pnpm install --frozen-lockfile
