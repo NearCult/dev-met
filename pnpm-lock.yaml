@@ -48,6 +48,9 @@ importers:
 
   apps/devmet-apps:
     dependencies:
+      '@devmet/ui':
+        specifier: workspace:*
+        version: link:../../package/devmet-ui
       axios:
         specifier: ^1.10.0
         version: 1.10.0

@@ -9,4 +9,7 @@ echo "Forcing submodule reset and update..."
 git submodule deinit -f .
 git submodule update --init --force --recursive
 
-echo "Submodules are up to date!"
+echo "installing node modules"
+
+cd dev-met
+npx pnpm install --frozen-lockfile
